@@ -5,6 +5,7 @@
  */
 package codigo;
 
+import com.sun.glass.events.KeyEvent;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -17,18 +18,20 @@ import javax.swing.Timer;
  * @author jorgecisneros
  */
 public class VentanaJuego extends javax.swing.JFrame {
-    
+
     static int ANCHO_PANTALLA = 800;
     static int ALTO_PANTALLA = 600;
-    
-    int filasMarcianos=5;
-    int columnaMarcianos=10;
-    
-    BufferedImage buffer=null;
-    
+    int posY = 100;
+    int contador = 0;
+    int filasMarcianos = 5;
+    int columnaMarcianos = 10;
+    int separacionEntreMarcianoH = 15;
+    int separacionEntreMarcianoV = 10;
+    boolean direccionMarcianos = false;
+    BufferedImage buffer = null;
+
     //bucle animacion del juego 
     //en este caso , es un hilo de ejecucion nuevo que se encarga de refrescar la pantalla
-    
     Timer temporizador = new Timer(10, new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -36,35 +39,91 @@ public class VentanaJuego extends javax.swing.JFrame {
             bucleDelJuego();
         }
     });
-    
+    Marciano miMarciano = new Marciano(ANCHO_PANTALLA);
+    Marciano[][] listaMarciano = new Marciano[filasMarcianos][columnaMarcianos];
+
+    Nave miNave = new Nave();
+    Disparo miDisparo = new Disparo();
+
     /**
      * Creates new form VentanaJuego
      */
     public VentanaJuego() {
         initComponents();
-        setSize(ANCHO_PANTALLA,ALTO_PANTALLA);
-        buffer = (BufferedImage) jPanel1.createImage(ANCHO_PANTALLA,ALTO_PANTALLA);
+        setSize(ANCHO_PANTALLA, ALTO_PANTALLA);
+        buffer = (BufferedImage) jPanel1.createImage(ANCHO_PANTALLA, ALTO_PANTALLA);
         buffer.createGraphics();
         temporizador.start();
-    }
-public void bucleDelJuego(){
-    //este metodo gobierno en el redibujado de los bjetos en el jpanel1
-    
-    //primero borro todo
-    Graphics2D g2 = (Graphics2D) buffer.getGraphics();
-    g2.setColor(Color.BLACK);
-    g2.fillRect(0, 0, ANCHO_PANTALLA, ALTO_PANTALLA);
-    
-    //////////////////////////////////////////////////////
-    
-    
-    //////////////////////////////////////////////////////
-    //dibujo de golpe tod el buffer sobre el jpanel 
-    g2 = (Graphics2D) jPanel1.getGraphics();
-    g2.drawImage(buffer, 0, 0, null);
+        miNave.posX = ANCHO_PANTALLA / 2 - miNave.imagenNave.getWidth(this) / 2;
+        miNave.posY = ALTO_PANTALLA / 2 + 150;
+        for (int i = 0; i < filasMarcianos; i++) {
+            for (int j = 0; j < columnaMarcianos; j++) {
+                listaMarciano[i][j] = new Marciano(ANCHO_PANTALLA);
+                listaMarciano[i][j].posX = j * (separacionEntreMarcianoH + listaMarciano[i][j].imagen1.getWidth(null));
+                listaMarciano[i][j].posY = i * (separacionEntreMarcianoV + listaMarciano[i][j].imagen1.getHeight(null));
+            }
+        }
 
-    
-}
+    }
+
+    private void pintaMarcianos(Graphics2D _g2) {
+        for (int i = 0; i < filasMarcianos; i++) {
+            for (int j = 0; j < columnaMarcianos; j++) {
+                listaMarciano[i][j].mueve(direccionMarcianos);
+                if (listaMarciano[i][j].posX >= ANCHO_PANTALLA - listaMarciano[i][j].imagen1.getWidth(null)||
+                    listaMarciano[i][j].posX <= 0 ) {
+                    direccionMarcianos = !direccionMarcianos;
+                    //hago que todos los marcianos salten a la siguiente columna
+                    for(int k =0; k <filasMarcianos;k++){
+                        for(int m = 0; m<columnaMarcianos;m++){
+                            listaMarciano[k][m].posY=listaMarciano[k][m].posY+listaMarciano[k][m].imagen1.getHeight(null)/4;
+                        }
+                    }
+                   
+                }
+//                if(listaMarciano[i][j].posX<=ANCHO_PANTALLA){
+//                    direccionMarcianos=!direccionMarcianos; 
+//                }
+               
+                    
+                    
+                    
+                
+                if (contador < 50) {
+                    _g2.drawImage(listaMarciano[i][j].imagen1, listaMarciano[i][j].posX, listaMarciano[i][j].posY, null);
+                } else if (contador < 100) {
+                    _g2.drawImage(listaMarciano[i][j].imagen2, listaMarciano[i][j].posX, listaMarciano[i][j].posY, null);
+                } else {
+                    contador = 0;
+                }
+
+            }
+        }
+    }
+
+    public void bucleDelJuego() {
+        //este metodo gobierno en el redibujado de los bjetos en el jpanel1
+
+        //primero borro todo
+        Graphics2D g2 = (Graphics2D) buffer.getGraphics();
+        g2.setColor(Color.BLACK);
+        g2.fillRect(0, 0, ANCHO_PANTALLA, ALTO_PANTALLA);
+        contador++;
+        //////////////////////////////////////////////////////
+        pintaMarcianos(g2);
+
+        //dibuja la nave
+        g2.drawImage(miNave.imagenNave, miNave.posX, miNave.posY, null);
+        g2.drawImage(miDisparo.imagenDisparo, miDisparo.posX, miDisparo.posY, null);
+        miNave.mueve();
+        miDisparo.mueve();
+        //////////////////////////////////////////////////////
+        //dibujo de golpe tod el buffer sobre el jpanel 
+        g2 = (Graphics2D) jPanel1.getGraphics();
+        g2.drawImage(buffer, 0, 0, null);
+        // System.out.println(contador);
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -77,6 +136,23 @@ public void bucleDelJuego(){
         jPanel1 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                formKeyPressed(evt);
+            }
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                formKeyReleased(evt);
+            }
+        });
+
+        jPanel1.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                jPanel1KeyPressed(evt);
+            }
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                jPanel1KeyReleased(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -102,6 +178,42 @@ public void bucleDelJuego(){
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jPanel1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jPanel1KeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jPanel1KeyPressed
+
+    private void jPanel1KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jPanel1KeyReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jPanel1KeyReleased
+
+    private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
+        switch (evt.getExtendedKeyCode()) {
+            case KeyEvent.VK_LEFT:
+                miNave.setNaveGiraIzquierda(true);
+                break;
+            case KeyEvent.VK_RIGHT:
+                miNave.setNaveGiraDerecha(true);
+                break;
+            //aqui va disparotmb
+            case KeyEvent.VK_SPACE:
+                miDisparo.posicionADisparo(miNave);
+                miDisparo.posicionADisparo(miNave);
+                break;
+        }
+    }//GEN-LAST:event_formKeyPressed
+
+    private void formKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyReleased
+        switch (evt.getExtendedKeyCode()) {
+            case KeyEvent.VK_LEFT:
+                miNave.setNaveGiraIzquierda(false);
+                break;
+            case KeyEvent.VK_RIGHT:
+                miNave.setNaveGiraDerecha(false);
+                break;
+
+        }
+    }//GEN-LAST:event_formKeyReleased
 
     /**
      * @param args the command line arguments

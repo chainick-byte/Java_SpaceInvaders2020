@@ -15,7 +15,7 @@ import javax.imageio.ImageIO;
  *
  */
 public class Marciano {
-
+    
     public Image imagen1 = null;
     public Image imagen2 = null;
     public int posX=0;
@@ -28,15 +28,6 @@ public class Marciano {
     //lo unico que queremos que este constructor se inicialice con el valor que le pasamos 
     public Marciano(int _anchoPantalla) {
         anchoPantalla = _anchoPantalla;
-        try {
-            //en este caso la imagen se lee desde el disco duro no desde netebeans
-            imagen1 = ImageIO.read(getClass().getResource("/imagenes/marcianito1.png"));
-            imagen2 = ImageIO.read(getClass().getResource("/imagenes/marcianito2.png"));
-        } catch (Exception e) {
-            
-            
-
-        }
     }
     public void mueve(boolean direccion){
         if(direccion){

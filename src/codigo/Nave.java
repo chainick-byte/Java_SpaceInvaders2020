@@ -17,12 +17,7 @@ public class Nave {
     private boolean naveGiraDerecha=false;
     private boolean naveGiraIzquierda=false;
     public Nave(){
-         try {
-            //en este caso la imagen se lee desde el disco duro no desde netebeans
-            imagenNave = ImageIO.read(getClass().getResource("/imagenes/nave.png"));
-           
-        } catch (Exception e) {
-    }
+   
 }
     public void mueve(){
         if(naveGiraIzquierda && posX>0){
